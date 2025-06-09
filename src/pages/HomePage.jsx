@@ -1,17 +1,17 @@
 import { Box, Container, TextField, Button, IconButton, Typography, Tooltip, Menu, MenuItem } from '@mui/material'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { BiDuplicate, BiEdit, BiSearch } from 'react-icons/bi'
 import { FaFilter } from 'react-icons/fa'
 import { useNavigate } from 'react-router-dom'
 import { CgAddR } from 'react-icons/cg'
 import ReusableTable from '../components/ReuseableComponents/ResuseableTable'
-import { useState } from 'react'
 import { localstoragecrudapi } from '../api/localstoragecrudapi'
 import { FcDeleteRow } from 'react-icons/fc'
 import ResuseableModal from '../components/ReuseableComponents/ResuseableModal'
 import { toast } from 'react-toastify'
 import { v4 as uuidv4 } from 'uuid';
 import ReuseableCard from '../components/ReuseableComponents/ReuseableCard'
+import { jsonservercrudapi } from '../api/jsonservercrudapi'
 
 const HomePage = () => {
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -52,12 +52,15 @@ const HomePage = () => {
   }
   // Load books from localStorage on mount
   useEffect(() => {
-    try {
-      const booksData = localstoragecrudapi.getBooks('libraryAppData');
-      setAllBooks(booksData ? JSON.parse(booksData) : []);
-    } catch {
-      setAllBooks([]);
-    }
+    const fetchBooks = async () => {
+      try {
+        const booksData = await jsonservercrudapi.getBooks('books');
+        setAllBooks(Array.isArray(booksData) ? booksData : []);
+      } catch {
+        setAllBooks([]);
+      }
+    };
+    fetchBooks();
   }, []);
 
   // Filter books by search term (case-insensitive, matches book or author)
@@ -95,17 +98,12 @@ const HomePage = () => {
 
   console.log(isLoading)
 
-  const handleDelete = (row) => {
+  const handleDelete = async (row) => {
     try {
-      // Get current books from localStorage
-      const booksData = localstoragecrudapi.getBooks('libraryAppData');
-      const books = booksData ? JSON.parse(booksData) : [];
-      // Remove the book with the matching id
-      const updatedBooks = books.filter(b => b.id !== row.id);
-      // Update localStorage
-      localstoragecrudapi.setBook('libraryAppData', JSON.stringify(updatedBooks));
-      // Update state
-      setAllBooks(updatedBooks);
+      await jsonservercrudapi.removeBook('books', row.id);
+      // Fetch updated books
+      const booksData = await jsonservercrudapi.getBooks('books');
+      setAllBooks(Array.isArray(booksData) ? booksData : []);
     } catch (error) {
       console.error('Error deleting book:', error);
     } finally {
@@ -114,18 +112,13 @@ const HomePage = () => {
     }
   }
 
-  const handleDuplicate = (row) => {
+  const handleDuplicate = async (row) => {
     try {
-      // Get current books from localStorage
-      const booksData = localstoragecrudapi.getBooks('libraryAppData');
-      const books = booksData ? JSON.parse(booksData) : [];
-      // Duplicate the book and assign a new id
       const duplicateBook = { ...row, id: uuidv4() };
-      const updatedBooks = [...books, duplicateBook];
-      // Update localStorage
-      localstoragecrudapi.setBook('libraryAppData', JSON.stringify(updatedBooks));
-      // Update state
-      setAllBooks(updatedBooks);
+      await jsonservercrudapi.setBooks('books', duplicateBook);
+      // Fetch updated books
+      const booksData = await jsonservercrudapi.getBooks('books');
+      setAllBooks(Array.isArray(booksData) ? booksData : []);
     } catch (error) {
       console.error('Error duplicating book:', error);
     }

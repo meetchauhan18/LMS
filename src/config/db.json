@@ -1,8 +1,10 @@
 {
-    "books": [
-
-    ],
-    "students": [
-        
-    ]
+  "books": [
+    {
+      "id": "7187046b-39b7-46ba-975d-98814e7b9c2a",
+      "book": "Harry Potter",
+      "author": "JK Rowling"
+    }
+  ],
+  "students": []
 }

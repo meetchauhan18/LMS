@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
-import { localstoragecrudapi } from '../api/localstoragecrudapi.js';
+import { jsonservercrudapi } from '../api/jsonservercrudapi.js';
 
 
 const AddBook = () => {
@@ -21,12 +21,15 @@ const AddBook = () => {
   });
 
   useEffect(() => {
-    try {
-      const booksData = localstoragecrudapi.getBooks('libraryAppData');
-      setAllBooks(booksData ? JSON.parse(booksData) : []);
-    } catch {
-      setAllBooks([]);
-    }
+    const fetchBooks = async () => {
+      try {
+        const booksData = await jsonservercrudapi.getBooks('books');
+        setAllBooks(Array.isArray(booksData) ? booksData : []);
+      } catch {
+        setAllBooks([]);
+      }
+    };
+    fetchBooks();
   }, []);
 
   //Form Value Checking
@@ -37,7 +40,7 @@ const AddBook = () => {
   }
 
   // Form Handling
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     SetIsAdding(true);
 
@@ -53,11 +56,12 @@ const AddBook = () => {
     }
 
     try {
-      // Add new book to state and localStorage
+      // Add new book to server
       const newBook = { ...form, id: uuidv4() };
-      const newAllBooksData = [...allBooks, newBook];
-      setAllBooks(newAllBooksData);
-      localstoragecrudapi.setBook('libraryAppData', JSON.stringify(newAllBooksData));
+      await jsonservercrudapi.setBooks('books', newBook);
+      // Fetch updated books
+      const booksData = await jsonservercrudapi.getBooks('books');
+      setAllBooks(Array.isArray(booksData) ? booksData : []);
       setForm({ book: '', author: '', id: uuidv4() });
       setError({ message: '', error: false });
       toast.success('Book added successfully!');

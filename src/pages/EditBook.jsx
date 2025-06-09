@@ -1,25 +1,44 @@
 import { Box, Button, Container, FormControl, TextField, Typography } from '@mui/material'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
-import { localstoragecrudapi } from '../api/localstoragecrudapi.js';
+import { jsonservercrudapi } from '../api/jsonservercrudapi.js';
 
 
 const EditBook = () => {
   const { id } = useParams();
-  // Safely get books from localStorage, default to []
-  const initialBooks = (() => {
-    const data = localstoragecrudapi.getBooks('libraryAppData');
-    try {
-      return data ? JSON.parse(data) : [];
-    } catch {
-      return [];
-    }
-  })();
-  const [allBooks, setAllBooks] = useState(initialBooks);
-  const BookToEdit = allBooks.find(books => books.id === id);
+  const [allBooks, setAllBooks] = useState([]);
+  const [BookToEdit, setBookToEdit] = useState(null);
   const navigate = useNavigate();
+  const [isEditing, SetIsEditing] = useState(false);
+  const [form, setForm] = useState({
+    book: '',
+    author: '',
+    id: ''
+  });
+  const [error, setError] = useState({
+    message: '',
+    error: false
+  });
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const booksData = await jsonservercrudapi.getBooks('books');
+        setAllBooks(Array.isArray(booksData) ? booksData : []);
+        const foundBook = (Array.isArray(booksData) ? booksData : []).find(b => b.id === id);
+        setBookToEdit(foundBook);
+        if (foundBook) {
+          setForm({ book: foundBook.book, author: foundBook.author, id: foundBook.id });
+        }
+      } catch {
+        setAllBooks([]);
+        setBookToEdit(null);
+      }
+    };
+    fetchBooks();
+  }, [id]);
 
   // Handle case where book is not found
   if (!BookToEdit) {
@@ -44,18 +63,6 @@ const EditBook = () => {
     );
   }
 
-  const [isEditing, SetIsEditing] = useState(false);
-  const [form, setForm] = useState({
-    book: BookToEdit.book,
-    author: BookToEdit.author,
-    id: uuidv4()
-  });
-  console.log
-  const [error, setError] = useState({
-    message: '',
-    error: false
-  });
-
   //Form Value Checking
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -64,11 +71,10 @@ const EditBook = () => {
   }
 
   // Form Handling
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     SetIsEditing(true);
-    
-    if(BookToEdit.author === form.author || BookToEdit.book === form.book){
+    if (BookToEdit.author === form.author && BookToEdit.book === form.book) {
       toast.error('No updates found in the details');
       SetIsEditing(false);
       return;
@@ -88,16 +94,14 @@ const EditBook = () => {
       SetIsEditing(false);
       return;
     }
-
     try {
-      // Add new book to state and localStorage
-      const newBook = { ...form, id: uuidv4() };
-      const newAllBooksData = [...allBooks, newBook];
-      setAllBooks(newAllBooksData);
-      localstoragecrudapi.setBook('libraryAppData', JSON.stringify(newAllBooksData));
-      setForm({ book: '', author: '', id: uuidv4() });
+      // Update book on server
+      await jsonservercrudapi.updateBook('books', BookToEdit.id, form);
+      // Fetch updated books
+      const booksData = await jsonservercrudapi.getBooks('books');
+      setAllBooks(Array.isArray(booksData) ? booksData : []);
       setError({ message: '', error: false });
-      toast.success('Book added successfully!');
+      toast.success('Book updated successfully!');
     } catch (err) {
       toast.error('Error Editing Book');
       console.error(err);

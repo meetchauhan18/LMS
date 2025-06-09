@@ -1,20 +1,21 @@
 import { toast } from "react-toastify";
 
-const BASE_URL = 'https://localhost:7575';
+const BASE_URL = 'http://localhost:7575'; // Use http, not https
 
 export const jsonservercrudapi = {
     getBooks: async (resource) => {
         try {
             const response = await fetch(`${BASE_URL}/${resource}`, { method: "GET" });
-
-            if (!response) {
+            if (!response.ok) {
                 toast.error('Error fetching books (GET BOOKS REQUEST)');
-                return
+                return [];
             }
-
-            console.log(JSON.parse(response));
+            const data = await response.json();
+            return data;
         } catch (error) {
-            console.error(error)
+            console.error(error);
+            toast.error('Error fetching books (GET BOOKS REQUEST)');
+            return [];
         }
     },
     setBooks: async (resource, value) => {
@@ -25,32 +26,54 @@ export const jsonservercrudapi = {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(value)
-            })
-
-            if (!response) {
+            });
+            if (!response.ok) {
                 toast.error('Error storing books (SET BOOKS REQUEST)');
-                return
+                return null;
             }
-
-            console.log(response);
+            const data = await response.json();
+            return data;
         } catch (error) {
-            console.error(error)
+            console.error(error);
+            toast.error('Error storing books (SET BOOKS REQUEST)');
+            return null;
         }
     },
-    removeBook: (resource, id) => {
+    removeBook: async (resource, id) => {
         try {
-            const data = jsonservercrudapi.getBooks(resource);
-            const newUpdatedData = data.filter(book => book.id !== id);
-            jsonservercrudapi.setBooks(resource, newUpdatedData);
+            const response = await fetch(`${BASE_URL}/${resource}/${id}`, {
+                method: "DELETE"
+            });
+            if (!response.ok) {
+                toast.error('Error deleting book');
+                return false;
+            }
+            return true;
         } catch (error) {
-            console.error(error)
+            console.error(error);
+            toast.error('Error deleting book');
+            return false;
         }
     },
-    updateBook: (resource, id) => {
+    updateBook: async (resource, id, value) => {
         try {
-            //
+            const response = await fetch(`${BASE_URL}/${resource}/${id}`, {
+                method: "PUT",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(value)
+            });
+            if (!response.ok) {
+                toast.error('Error updating book');
+                return null;
+            }
+            const data = await response.json();
+            return data;
         } catch (error) {
-            //
+            console.error(error);
+            toast.error('Error updating book');
+            return null;
         }
     }
-}
+};
