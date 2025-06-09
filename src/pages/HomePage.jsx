@@ -20,13 +20,16 @@ const HomePage = () => {
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [authorFilter, setAuthorFilter] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  
   // Get unique authors from allBooks (filter out undefined/null authors)
   const uniqueAuthors = Array.from(new Set(
     allBooks
       .filter(book => book && book.author)
       .map(book => book.author)
   ));
-  const uniqueBooksCount = Array.from(new Set(allBooks.filter(book => book && book.book).map(book => book.book))).length;
+  
 
 
   const handleClick = (e) => {
@@ -65,12 +68,22 @@ const HomePage = () => {
       (!authorFilter || book.author === authorFilter)
   ) || allBooks;
 
-  const uniqueTableAuthorsCount = Array.from(new Set(
-    filteredBooks
-      .filter(book => book && book.author)
-      .map(book => book.author)
-  )).length;
-  const uniqueTableBooksCount = Array.from(new Set(filteredBooks.filter(book => book && book.book).map(book => book.book))).length;
+  // Set loading true on search/filter change, then false after delay
+  useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm, authorFilter]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      if(allBooks || filteredBooks) {
+      setIsLoading(false);
+    }
+    }, 1000)
+  }, [filteredBooks])
 
   const handleEdit = (row) => {
     try {
@@ -79,6 +92,8 @@ const HomePage = () => {
       console.error("error", error);
     }
   }
+
+  console.log(isLoading)
 
   const handleDelete = (row) => {
     try {
@@ -284,7 +299,7 @@ const HomePage = () => {
               Clear Filters
             </Button>
           )}
-          <ReusableTable columns={ReusableTableColumns} rows={filteredBooks} actions={ReusableTableActions} />
+          <ReusableTable columns={ReusableTableColumns} isLoading={isLoading} rows={filteredBooks} actions={ReusableTableActions} />
           <ResuseableModal open={open} onClose={handleClose} title={'Confirm delete?'} maxWidth={'xs'} actions={[
             <Button key={bookToDelete.id} variant='contained' onClick={() => handleDelete(bookToDelete)}>Delete</Button>
           ]}>
@@ -299,7 +314,7 @@ const HomePage = () => {
         borderRadius: 3,
         mt: { xs: 2, md: 0 },
       }}>
-        <ReuseableCard sx={{ width: '100%', minWidth: { xs: 0, md: '400px' }, borderRadius: 3 }}>
+        <ReuseableCard isLoading={isLoading} sx={{ width: '100%', minWidth: { xs: 0, md: '400px' }, borderRadius: 3 }}>
           <Typography sx={{ fontWeight: 600, fontSize: "21px" }}>
             Search Data & Counts
           </Typography>
