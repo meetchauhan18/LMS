@@ -20,6 +20,30 @@ const EditBook = () => {
   const [allBooks, setAllBooks] = useState(initialBooks);
   const BookToEdit = allBooks.find(books => books.id === id);
   const navigate = useNavigate();
+
+  // Handle case where book is not found
+  if (!BookToEdit) {
+    return (
+      <Container sx={{
+        minWidth: '100%',
+        padding: '16px',
+        backgroundColor: '#f7f7f7',
+        borderRadius: '8px',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+      }}>
+        <Box>
+          <Typography variant="h5" sx={{ marginBottom: '16px', color: '#d32f2f' }}>Book not found</Typography>
+          <Button variant="contained" color="primary" onClick={() => navigate('/')}>Go Home</Button>
+        </Box>
+      </Container>
+    );
+  }
+
   const [isEditing, SetIsEditing] = useState(false);
   const [form, setForm] = useState({
     book: BookToEdit.book,

@@ -68,7 +68,7 @@ const HomePage = () => {
       (!authorFilter || book.author === authorFilter)
   ) || allBooks;
 
-  // Set loading true on search/filter change, then false after delay
+  // Set loading true on search/filter change
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => {
@@ -300,7 +300,7 @@ const HomePage = () => {
             </Button>
           )}
           <ReusableTable columns={ReusableTableColumns} isLoading={isLoading} rows={filteredBooks} actions={ReusableTableActions} />
-          <ResuseableModal open={open} onClose={handleClose} title={'Confirm delete?'} maxWidth={'xs'} actions={[
+          <ResuseableModal isLoading={isLoading} open={open} onClose={handleClose} title={'Confirm delete?'} maxWidth={'xs'} actions={[
             <Button key={bookToDelete.id} variant='contained' onClick={() => handleDelete(bookToDelete)}>Delete</Button>
           ]}>
             Are you sure you want to delete {bookToDelete.book} - {bookToDelete.author}?
@@ -314,7 +314,7 @@ const HomePage = () => {
         borderRadius: 3,
         mt: { xs: 2, md: 0 },
       }}>
-        <ReuseableCard isLoading={isLoading} sx={{ width: '100%', minWidth: { xs: 0, md: '400px' }, borderRadius: 3 }}>
+        <ReuseableCard isLoading={isLoading} skeletonWidth={"100%"} sx={{ width: '100%', minWidth:"400px", borderRadius: 3 }}>
           <Typography sx={{ fontWeight: 600, fontSize: "21px" }}>
             Search Data & Counts
           </Typography>

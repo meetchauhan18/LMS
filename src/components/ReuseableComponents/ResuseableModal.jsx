@@ -1,12 +1,12 @@
-import { Dialog, DialogActions, DialogContent, DialogTitle, IconButton } from '@mui/material'
+import { Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Skeleton } from '@mui/material'
 import React from 'react'
 import { IoCloseCircleOutline } from 'react-icons/io5';
 
-const ResuseableModal = ({ open, onClose, title, booksData, maxWidth, children, actions, ...props }) => {
+const ResuseableModal = ({ open, onClose, title, booksData, maxWidth, children, isLoading, actions, ...props }) => {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth={maxWidth} {...props}>
       <DialogTitle>
-        {title}
+        {isLoading ?  <Skeleton variant="rectangular" width={50} height={24} /> : title}
         {onClose ? (
           <IconButton
             aria-label="close"
@@ -18,10 +18,10 @@ const ResuseableModal = ({ open, onClose, title, booksData, maxWidth, children, 
         ) : null}
       </DialogTitle>
       <DialogContent>
-        {children}
+        {isLoading ? <Skeleton variant="rectangular" width={100} height={36} /> : children}
       </DialogContent>
       {actions && <DialogActions>
-        {actions} </DialogActions>}
+        {isLoading ? <Skeleton variant='text' width={"40%"} height={20} /> : actions} </DialogActions>}
     </Dialog>
   )
 }
